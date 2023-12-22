@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	BootConfigPath      = "/proc/config.gz"
+	BootConfigPath      = "/data/local/config.gz"
 	ConfigDebugInfoBtf  = "CONFIG_DEBUG_INFO_BTF"
 	SysKernelBtfVmlinux = "/sys/kernel/btf/vmlinux"
 )
