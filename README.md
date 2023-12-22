@@ -195,7 +195,6 @@ make nocore
 bin/ecapture --help
 ```
 
-
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/gojue/ecapture.svg)](https://starchart.cc/gojue/ecapture)
