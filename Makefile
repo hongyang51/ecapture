@@ -134,6 +134,7 @@ TAG := $(shell git describe --abbrev=0 --tags ${TAG_COMMIT} 2>/dev/null || true)
 COMMIT := $(shell git rev-parse --short HEAD)
 DATE := $(shell git log -1 --format=%cd --date=format:"%Y%m%d")
 LAST_GIT_TAG := $(TAG:v%=%)-$(DATE)-$(COMMIT)
+RPM_RELEASE := $(DATE).$(COMMIT)
 #ifneq ($(COMMIT), $(TAG_COMMIT))
 #	LAST_GIT_TAG := $(LAST_GIT_TAG)-prev-$(TAG_COMMIT)
 #endif
@@ -155,6 +156,7 @@ UNAME_R := $(shell uname -r)
 # Target Arch
 #
 BPFHEADER ?=
+IGNORE_LESS52 ?=
 ifeq ($(UNAME_M),aarch64)
 	 ARCH = arm64
 	 LINUX_ARCH = arm64
@@ -162,6 +164,7 @@ ifeq ($(UNAME_M),aarch64)
 	 BPFHEADER = -I ./kern \
 				 -I ./kern/bpf/arm64
 	 AUTOGENCMD = ls -al kern/bpf/arm64/vmlinux.h
+	 IGNORE_LESS52 = -ignore '.*_less52\.o'
 else
 	# x86_64 default
 	ARCH = x86_64
@@ -187,22 +190,25 @@ BPF_NOCORE_TAG = $(subst .,_,$(KERN_RELEASE)).$(subst .,_,$(VERSION))
 #
 # BPF Source file
 #
-
-TARGETS := kern/openssl_1_1_1a
+TARGETS := kern/boringssl_a_13
+TARGETS += kern/boringssl_a_14
+TARGETS += kern/openssl_1_1_1a
 TARGETS += kern/openssl_1_1_1b
 TARGETS += kern/openssl_1_1_1d
 TARGETS += kern/openssl_1_1_1j
 TARGETS += kern/openssl_1_1_0a
 TARGETS += kern/openssl_1_0_2a
 TARGETS += kern/openssl_3_0_0
-TARGETS += kern/boringssl_a_13
-TARGETS += kern/boringssl_a_14
-TARGETS += kern/bash
-TARGETS += kern/gnutls
-TARGETS += kern/nspr
-TARGETS += kern/mysqld
-TARGETS += kern/postgres
 TARGETS += kern/gotls
+
+ifeq ($(ANDROID),0)
+	TARGETS += kern/bash
+	TARGETS += kern/gnutls
+	TARGETS += kern/nspr
+	TARGETS += kern/mysqld
+	TARGETS += kern/postgres
+endif
+
 
 # Generate file name-scheme based on TARGETS
 KERN_SOURCES = ${TARGETS:=_kern.c}
@@ -251,13 +257,13 @@ env:
 	@echo ---------------------------------------
 
 ECAPTURE_NAME = $(shell $(CMD_GREP) "Name:" builder/rpmBuild.spec | $(CMD_AWK) '{print $$2}')
-RPM_SOURCE0 = $(ECAPTURE_NAME)-$(ECAPTURE_VERSION).tar.gz
+RPM_SOURCE0 = $(ECAPTURE_NAME)-$(TAG).tar.gz
 
 .PHONY:rpm
 rpm:
-	@$(CMD_RPM_SETUP_TREE)
-	$(CMD_SED) -i '0,/^Version:.*$$/s//Version:    $(VERSION)/' builder/rpmBuild.spec
-	$(CMD_SED) -i '0,/^Release:.*$$/s//Release:    $(RELEASE)/' builder/rpmBuild.spec
+	@$(CMD_RPM_SETUP_TREE) || exit 1
+	$(CMD_SED) -i '0,/^Version:.*$$/s//Version:    $(TAG)/' builder/rpmBuild.spec
+	$(CMD_SED) -i '0,/^Release:.*$$/s//Release:    $(RPM_RELEASE)/' builder/rpmBuild.spec
 	$(CMD_TAR) zcvf ~/rpmbuild/SOURCES/$(RPM_SOURCE0) ./
 	$(CMD_RPMBUILD) -ba builder/rpmBuild.spec
 
@@ -368,13 +374,13 @@ $(KERN_OBJECTS_NOCORE): %.nocore: %.c \
 assets: \
 	.checkver_$(CMD_GO) \
 	ebpf
-	$(CMD_GO) run github.com/shuLhan/go-bindata/cmd/go-bindata -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
+	$(CMD_GO) run github.com/shuLhan/go-bindata/cmd/go-bindata $(IGNORE_LESS52) -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
 
 .PHONY: assets_nocore
 assets_nocore: \
 	.checkver_$(CMD_GO) \
 	ebpf_nocore
-	$(CMD_GO) run github.com/shuLhan/go-bindata/cmd/go-bindata -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
+	$(CMD_GO) run github.com/shuLhan/go-bindata/cmd/go-bindata $(IGNORE_LESS52) -pkg assets -o "assets/ebpf_probe.go" $(wildcard ./user/bytecode/*.o)
 
 .PHONY: build
 build: \
