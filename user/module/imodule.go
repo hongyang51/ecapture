@@ -85,10 +85,8 @@ func (m *Module) Init(ctx context.Context, logger *log.Logger, conf config.IConf
 	m.logger = logger
 	m.processor = event_processor.NewEventProcessor(logger, conf.GetHex())
 	m.isKernelLess5_2 = false //set false default
-	kv, err := kernel.HostVersion()
-	if err != nil {
-		// nothing to do.
-	}
+	kv, _ := kernel.HostVersion()
+	// it's safe to ignore err because we have checked it in main funcition
 	if kv < kernel.VersionCode(5, 2, 0) {
 		m.isKernelLess5_2 = true
 	}
@@ -294,7 +292,11 @@ func (m *Module) Dispatcher(e event.IEventStruct) {
 	// If Hex mode is enabled, data in hex format is directly printed for event processor and output events
 	if m.conf.GetHex() {
 		if e.EventType() == event.EventTypeEventProcessor || e.EventType() == event.EventTypeOutput {
-			m.logger.Println(e.StringHex())
+			s := e.StringHex()
+			if s == "" {
+				return
+			}
+			m.logger.Println(s)
 			return
 		}
 	}
@@ -303,7 +305,11 @@ func (m *Module) Dispatcher(e event.IEventStruct) {
 	// they will be handled according to multiple branches of the switch
 	switch e.EventType() {
 	case event.EventTypeOutput:
-		m.logger.Println(e.String())
+		s := e.String()
+		if s == "" {
+			return
+		}
+		m.logger.Println(s)
 	case event.EventTypeEventProcessor:
 		m.processor.Write(e)
 	case event.EventTypeModuleData:

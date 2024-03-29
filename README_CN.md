@@ -42,7 +42,7 @@ eBPF `Uprobe`/`Traffic Control`实现的各种用户空间/内核空间的数据
 
 ### 演示视频
 #### Linux上使用eCapture
-[![eCapture User Manual](./images/ecapture-user-manual.png)](https://www.bilibili.com/video/BV1si4y1Q74a "eCapture User Manual")
+![](./images/ecapture-help-v0.7.4.png)
 
 #### Android上使用eCapture
 [![eCapture User Manual](./images/ecapture-user-manual-on-android.png)](https://www.bilibili.com/video/BV1xP4y1Z7HB "eCapture for Android")
@@ -72,12 +72,12 @@ eCapture默认查找`/etc/ld.so.conf`文件，查找SO文件的加载目录，�
 
 ## 模块介绍
 eCapture 有8个模块，分别支持openssl/gnutls/nspr/boringssl/gotls等类库的TLS/SSL加密类库的明文捕获、Bash、Mysql、PostGres软件审计。
-* bash		capture bash command 
-* gnutls	capture gnutls text content without CA cert for gnutls libraries. 
-* gotls		Capturing plaintext communication from Golang programs encrypted with TLS/HTTPS. 
-* mysqld	capture sql queries from mysqld 5.6/5.7/8.0 . 
-* nss		capture nss/nspr encrypted text content without CA cert for nss/nspr libraries. 
-* postgres	capture sql queries from postgres 10+. 
+* bash		capture bash command
+* gnutls	capture gnutls text content without CA cert for gnutls libraries.
+* gotls		Capturing plaintext communication from Golang programs encrypted with TLS/HTTPS.
+* mysqld	capture sql queries from mysqld 5.6/5.7/8.0 .
+* nss		capture nss/nspr encrypted text content without CA cert for nss/nspr libraries.
+* postgres	capture sql queries from postgres 10+.
 * tls		use to capture tls/ssl text content without CA cert. (Support openssl 1.0.x/1.1.x/3.0.x or newer).
 
 你可以通过`ecapture -h`来查看这些自命令列表。
@@ -90,8 +90,8 @@ openssl模块支持3中捕获模式
 ### Pcap 模式
 你可以通过`-m pcap`或`-m pcapng`参数来指定，需要配合`--pcapfile`、`-i`参数使用。其中`--pcapfile`参数的默认值为`ecapture_openssl.pcapng`。
 ```shell
-./ecapture tls -m pcap -i eth0 --pcapfile=ecapture.pcapng --port=443
-``` 
+./ecapture tls -m pcap -i eth0 --pcapfile=ecapture.pcapng tcp port 443
+```
 将捕获的明文数据包保存为pcapng文件，可以使用`Wireshark`打开查看。
 
 ### keylog 模式
@@ -121,33 +121,24 @@ cfc4n@vm-server:~$# cat /boot/config-`uname -r` | grep CONFIG_DEBUG_INFO_BTF
 CONFIG_DEBUG_INFO_BTF=y
 ```
 
-### openssl的无证书抓包 openssl
-执行任意https网络请求即可使用。
+### 启动eCapture
 ```shell
-curl https://www.qq.com
+./ecapture gotls --elfpath=/home/cfc4n/go_https_client --hex
 ```
 
-### libressl&boringssl的测试验证
+### 启动该程序:
+确保该程序会触发https请求。
 ```shell
-# 由于curl等工具依赖于原生openssl的安装，用以下方式测试，也可以重新编译安装相关的工具来测试
-vm@vm-server:~$ ldd /usr/local/bin/openssl
-	linux-vdso.so.1 (0x00007ffc82985000)
-	libssl.so.52 => /usr/local/lib/libssl.so.52 (0x00007f1730f9f000)
-	libcrypto.so.49 => /usr/local/lib/libcrypto.so.49 (0x00007f1730d8a000)
-	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f1730b62000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f17310b2000)
-
-# 使用libssl配置libssl.so的路径
-vm@vm-server:~$ sudo ./ecapture tls --libssl="/usr/local/lib/libssl.so.52" --hex
-
-# 另一个终端使用如下命令开启测试，可输入一些字符串，然后回车，观察ecapture的抓包输出
-vm@vm-server:~$ /usr/local/bin/openssl s_client -connect www.qq.com:443
-
-# boringssl的测试，同理
-/path/to/bin/bssl s_client -connect www.qq.com:443
+/home/cfc4n/go_https_client
 ```
+### 更多帮助
+```shell
+./ecapture gotls -h
+```
+
 
 ### bash的shell捕获
+capture bash command : `ecapture bash`
 ```shell
 ps -ef | grep foo
 ```
@@ -172,7 +163,7 @@ ps -ef | grep foo
 **推荐使用`UBUNTU 20.04` 及以上版本的Linux测试。**
 
 > **Note**
-> 
+>
 > Android版本编译方法见 [eCapture旁观者：Android HTTPS明文抓包](https://mp.weixin.qq.com/s/KWm5d0uuzOzReRtr9PmuWQ)
 
 ## 工具链版本
@@ -198,8 +189,13 @@ ps -ef | grep foo
 * libelf-dev
 
 **克隆仓库代码，并进行编译**
+
+注意：如果系统里没有 `/usr/local/lib/libpcap.a`，则下面 `make` 命令会将 libpcap
+编译并安装到 `/usr/local/lib` 目录下。如果系统里已经安装了 libpcap 但没有
+`/usr/local/lib/libpcap.a`，则 `make` 命令会破坏系统里的 libpcap 头文件。
+
 ```shell
-git clone git@github.com:gojue/ecapture.git
+git clone --recurse-submodules git@github.com:gojue/ecapture.git
 cd ecapture
 make
 bin/ecapture

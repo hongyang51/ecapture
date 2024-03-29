@@ -25,12 +25,15 @@ import (
 	"golang.org/x/arch/x86/x86asm"
 )
 
-// Arm64armInstSize via :  arm64/arm64asm/decode.go:Decode() size = 4
-const Arm64armInstSize = 4
-const GoTlsReadFunc = "crypto/tls.(*Conn).Read"
+const (
+	// Arm64armInstSize via :  arm64/arm64asm/decode.go:Decode() size = 4
+	Arm64armInstSize = 4
+
+	GoTlsReadFunc = "crypto/tls.(*Conn).Read"
+)
 
 var (
-	ErrorGoBINNotFound  = errors.New("GO application not found")
+	ErrorGoBINNotFound  = errors.New("The executable program (compiled by Golang) was not found")
 	ErrorSymbolNotFound = errors.New("symbol not found")
 	ErrorNoRetFound     = errors.New("no RET instructions found")
 )
@@ -43,7 +46,7 @@ type GoTLSConfig struct {
 	KeylogFile   string    `json:"keylogFile"` // keylogFile  The file stores SSL/TLS keys, and eCapture captures these keys during encrypted traffic communication and saves them to the file.
 	Model        string    `json:"model"`      // model  such as : text, pcapng/pcap, key/keylog.
 	Ifname       string    `json:"ifName"`     // (TC Classifier) Interface name on which the probe will be attached.
-	Port         uint16    `json:"port"`       // capture port
+	PcapFilter   string    `json:"pcapFilter"` // pcap filter
 	goElfArch    string    //
 	goElf        *elf.File //
 	ReadTlsAddrs []int
@@ -95,7 +98,7 @@ func (gc *GoTLSConfig) Check() error {
 	case "amd64":
 	case "arm64":
 	default:
-		err = fmt.Errorf("unsupport CPU arch :%s", goElfArch)
+		return fmt.Errorf("unsupport CPU arch :%s", goElfArch)
 	}
 	gc.goElfArch = goElfArch
 	gc.goElf = goElf
@@ -153,7 +156,7 @@ func (gc *GoTLSConfig) findRetOffsets(symbolName string) ([]int, error) {
 	var offsets []int
 	var instHex []byte
 	instHex = elfText[start:end]
-	offsets, err = gc.decodeInstruction(instHex)
+	offsets, _ = gc.decodeInstruction(instHex)
 	if len(offsets) == 0 {
 		return offsets, ErrorNoRetFound
 	}
@@ -174,10 +177,7 @@ func (gc *GoTLSConfig) decodeInstruction(instHex []byte) ([]int, error) {
 			}
 			i += inst.Len
 		} else {
-			inst, err := arm64asm.Decode(instHex[i:])
-			if err != nil {
-				return nil, err
-			}
+			inst, _ := arm64asm.Decode(instHex[i:]) // Why ignore error: https://github.com/gojue/ecapture/pull/506
 			if inst.Op == arm64asm.RET {
 				offsets = append(offsets, i)
 			}

@@ -25,8 +25,9 @@
 * mysql query SQL audit, support mysqld 5.6\5.7\8.0, and mariadDB.
 
 # eCapture User Manual
+![](./images/ecapture-help-v0.7.4.png)
 
-[![eCapture User Manual](./images/ecapture-user-manual.png)](https://www.youtube.com/watch?v=CoDIjEQCvvA "eCapture User Manual")
+Youtube video: [How to use eCapture v0.1.0](https://www.youtube.com/watch?v=CoDIjEQCvvA "eCapture User Manual")
 
 # Getting started
 
@@ -74,7 +75,7 @@ The OpenSSL module supports three capture modes:
 You can specify `-m pcap` or `-m pcapng` and use it in conjunction with `--pcapfile` and `-i` parameters. The default value for `--pcapfile` is `ecapture_openssl.pcapng`.
 
 ```shell
-./ecapture tls -m pcap -i eth0 --pcapfile=ecapture.pcapng --port=443
+./ecapture tls -m pcap -i eth0 --pcapfile=ecapture.pcapng tcp port 443
 ```
 
 This command saves captured plaintext data packets as a pcapng file, which can be viewed using `Wireshark`.
@@ -112,41 +113,26 @@ cfc4n@vm-server:~$# cat /boot/config-`uname -r` | grep CONFIG_DEBUG_INFO_BTF
 CONFIG_DEBUG_INFO_BTF=y
 ```
 
-### tls command
+### gotls command
 
 capture tls text context.
+
 Step 1:
 ```shell
-./ecapture tls --hex
+./ecapture gotls --elfpath=/home/cfc4n/go_https_client --hex
 ```
 
 Step 2:
 ```shell
-curl https://github.com
+/home/cfc4n/go_https_client
 ```
-
-### libressl&boringssl
+### more help
 ```shell
-# for installed libressl, libssl.so.52 is the dynamic ssl lib
-vm@vm-server:~$ ldd /usr/local/bin/openssl
-	linux-vdso.so.1 (0x00007ffc82985000)
-	libssl.so.52 => /usr/local/lib/libssl.so.52 (0x00007f1730f9f000)
-	libcrypto.so.49 => /usr/local/lib/libcrypto.so.49 (0x00007f1730d8a000)
-	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f1730b62000)
-	/lib64/ld-linux-x86-64.so.2 (0x00007f17310b2000)
-
-# use the libssl to config the libssl.so path
-vm@vm-server:~$ sudo ./ecapture tls --libssl="/usr/local/lib/libssl.so.52" --hex
-
-# in another terminal, use the command, then type some string, watch the output of ecapture
-vm@vm-server:~$ /usr/local/bin/openssl s_client -connect github.com:443
-
-# for installed boringssl, usage is the same
-/path/to/bin/bssl s_client -connect github.com:443
+./ecapture gotls -h
 ```
 
-### bash command
-capture bash command.
+## bash Module
+capture bash command : `ecapture bash`
 ```shell
 ps -ef | grep foo
 ```
@@ -160,7 +146,7 @@ ps -ef | grep foo
 # How to compile
 Linux Kernel: >= 4.18.
 
-## Tools 
+## Tools
 * golang 1.21 or newer
 * clang 9.0 or newer
 * cmake 3.18.4 or newer
@@ -182,8 +168,14 @@ In addition to the software listed in the 'Toolchain Version' section above, the
 * libelf-dev
 
 **Clone the repository code and compile it**
+
+Caution: The following `make` command will install libpcap into the system
+directory if `libpcap.a` does not exist under `/usr/local/lib`. If you have
+installed libpcap in system without `libpcap.a`, it maybe break your libpcap's
+headers.
+
 ```shell
-git clone git@github.com:gojue/ecapture.git
+git clone --recurse-submodules git@github.com:gojue/ecapture.git
 cd ecapture
 make
 bin/ecapture

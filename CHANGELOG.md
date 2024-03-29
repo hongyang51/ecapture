@@ -1,5 +1,61 @@
+# v0.7.5 (2024-03-03)
+## What's Changed
+
+## New Contributors
+
+**Full Changelog**: https://github.com/gojue/ecapture/compare/v0.7.4...v0.7.5
+<hr>
+
+# v0.7.4 (2024-02-24)
+## 🚀 Breaking Changes
+eCapture supports [Pcap Filter Syntax] (https://www.tcpdump.org/manpages/pcap-filter.7.html), and you can use the pcap filter expression to filter network packets like tcpdump.
+
+In the tls\gotls module, when the running mode is 'pcap', the pcap filter expression is supported, which can be set in the last parameter of the command line, for example:
+
+------
+eCapture支持[Pcap Filter Syntax](https://www.tcpdump.org/manpages/pcap-filter.7.html)，你可以像tcpdump一样使用pcap filter表达式来过滤网络包。
+
+在tls\gotls模块中，当运行模式为`pcap`时，支持pcap filter表达式，在命令行最后的参数中设定，例如：
+```shell
+ecapture tls -m pcap -i wlan0 -w save.pcapng host 192.168.1.1 and tcp port 443
+```
+
+![](https://github.com/gojue/ecapture/blob/master/images/ecapture-help-v0.7.4.png)
+
+## What's Changed
+* Update probe_bash.go by @sancppp in https://github.com/gojue/ecapture/pull/479
+* docs: Optimized the error message in the gotls module.(fix: #482) by @cfc4n in https://github.com/gojue/ecapture/pull/484
+* feat: Support pcap-filter expression for pcap mode by @Asphaltt in https://github.com/gojue/ecapture/pull/478
+* chore: Pcap filter tidy,support ubuntu arm64 to make libpcap by @cfc4n in https://github.com/gojue/ecapture/pull/487
+
+## New Contributors
+* @sancppp made their first contribution in https://github.com/gojue/ecapture/pull/479
+* @Asphaltt made their first contribution in https://github.com/gojue/ecapture/pull/478
+
+**Full Changelog**: https://github.com/gojue/ecapture/compare/v0.7.3...v0.7.4
+<hr>
+
+# v0.7.3 (2024-01-28)
+## What's Changed
+* makefile: Optimize the feature list for the Android version by @cfc4n in https://github.com/gojue/ecapture/pull/457
+* user: support event processor by @cfc4n in https://github.com/gojue/ecapture/pull/462
+* chore: remove refs to deprecated io/ioutil by @testwill in https://github.com/gojue/ecapture/pull/465
+* user: fix concurrent map read and map write #467 by @cfc4n in https://github.com/gojue/ecapture/pull/468
+* utils: support openssl 3.1.0-3.1.4 and 3.0.9-3.0.12 by @cfc4n in https://github.com/gojue/ecapture/pull/469
+* user: imporve dynamic link library path loading logic on aarch64 ubuntu by @cfc4n in https://github.com/gojue/ecapture/pull/470
+* user: imporve #463, impact on the performance of the tested program by @cfc4n in https://github.com/gojue/ecapture/pull/471
+* kern: support openssl 3.2.x , change ssl_st to ssl_connection_st by @cfc4n in https://github.com/gojue/ecapture/pull/472
+
+## New Contributors
+* @testwill made their first contribution in https://github.com/gojue/ecapture/pull/465
+
+**Full Changelog**: https://github.com/gojue/ecapture/compare/v0.7.2...v0.7.3
+<hr>
+
 # v0.7.2 (2024-01-01)
 ## What's Changed
+* user: improve pcapng writer, flush every 2s. by @cfc4n in https://github.com/gojue/ecapture/pull/455
+* builder: add debian package build script. by @cfc4n in https://github.com/gojue/ecapture/pull/456
 
 ## New Contributors
 

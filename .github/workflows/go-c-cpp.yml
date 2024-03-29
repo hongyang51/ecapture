@@ -11,111 +11,87 @@ jobs:
     runs-on: ubuntu-20.04
     name: build on ubuntu-20.04 x86_64
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.21.0'
       - name: Install Compilers
         run: |
           sudo apt-get update
-          sudo apt-get install --yes build-essential pkgconf libelf-dev llvm-9 clang-9 linux-tools-common linux-tools-generic
+          sudo apt-get install --yes build-essential pkgconf libelf-dev llvm-9 clang-9 linux-tools-common linux-tools-generic gcc
           for tool in "clang" "llc" "llvm-strip"
           do
             sudo rm -f /usr/bin/$tool
             sudo ln -s /usr/bin/$tool-9 /usr/bin/$tool
           done
         shell: bash
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
       - name: Build
         run: |
           make clean
           make env
           make nocore -j4
+          cd ./lib/libpcap/ && sudo make install
+          cd $GITHUB_WORKSPACE
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          #          version: v3.2.0
-
-          # Optional: working directory, useful for monorepos
-          # working-directory: somedir
-
-          # Optional: golangci-lint command line arguments.
-          args: --disable-all -E errcheck
-
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
-          # only-new-issues: true
-
-          # Optional: if set to true then the all caching functionality will be complete disabled,
-          #           takes precedence over all other caching options.
-          # skip-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/go/pkg.
-          # skip-pkg-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
-          # skip-build-cache: true
+          args: --disable-all -E errcheck -E staticcheck
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
       - name: Build NOCORE
         run: |
           make clean
           make env
           make nocore
       - name: Test
-        run: go test -v ./...
+        run: go test -v -race ./...
 
   build-on-ubuntu2204:
     runs-on: ubuntu-22.04
     name: build on ubuntu-22.04 x86_64
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
           go-version: '1.21.0'
       - name: Install Compilers
         run: |
           sudo apt-get update
-          sudo apt-get install --yes build-essential pkgconf libelf-dev llvm-14 clang-14 linux-tools-common linux-tools-generic
+          sudo apt-get install --yes build-essential pkgconf libelf-dev llvm-14 clang-14 linux-tools-common linux-tools-generic gcc
           for tool in "clang" "llc" "llvm-strip"
           do
             sudo rm -f /usr/bin/$tool
             sudo ln -s /usr/bin/$tool-14 /usr/bin/$tool
           done
         shell: bash
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+          fetch-depth: 0
       - name: Build
         run: |
           make clean
           make env
           make -j8
+          cd ./lib/libpcap/ && sudo make install
+          cd $GITHUB_WORKSPACE
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
-          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
-          #          version: v3.2.0
-
-          # Optional: working directory, useful for monorepos
-          # working-directory: somedir
-
-          # Optional: golangci-lint command line arguments.
-          args: --disable-all -E errcheck
-
-          # Optional: show only new issues if it's a pull request. The default value is `false`.
-          # only-new-issues: true
-
-          # Optional: if set to true then the all caching functionality will be complete disabled,
-          #           takes precedence over all other caching options.
-          # skip-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/go/pkg.
-          # skip-pkg-cache: true
-
-          # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
-          # skip-build-cache: true
+          args: --disable-all -E errcheck -E staticcheck
+          skip-cache: true
+          skip-pkg-cache: true
+          skip-build-cache: true
       - name: Build NOCORE
         run: |
           make clean
           make env
           make nocore
       - name: Test
-        run: go test -v ./...
+        run: go test -v -race ./...
 
   build-on-ubuntu2004-arm64:
     runs-on: ubuntu-22.04
@@ -127,8 +103,10 @@ jobs:
           - arch: aarch64
             distro: ubuntu22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
+          submodules: 'recursive'
+          fetch-depth: 0
           set-safe-directory: '/source_code'
       - name: Branch Name
         run: |
@@ -177,7 +155,7 @@ jobs:
           install: |
             uname -a
             apt-get update
-            apt-get install --yes wget git build-essential pkgconf libelf-dev llvm-12 clang-12  linux-tools-generic linux-tools-common
+            apt-get install --yes wget git build-essential pkgconf libelf-dev llvm-12 clang-12  linux-tools-generic linux-tools-common flex bison
             wget https://go.dev/dl/go1.21.0.linux-arm64.tar.gz
             rm -rf /usr/local/go
             tar -C /usr/local -xzf go1.21.0.linux-arm64.tar.gz
